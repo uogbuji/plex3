@@ -7,8 +7,8 @@ for speed.
 
 from copy import copy
 import string
-from sys import maxint
-from types import TupleType
+from sys import maxsize as sysmaxsize
+import logging
 
 
 class TransitionMap:
@@ -30,8 +30,8 @@ class TransitionMap:
 
     The following invariants hold:
         n >= 1
-        code_0 == -maxint
-        code_n == maxint
+        code_0 == -sys.maxsize
+        code_n == sys.maxsize
         code_i < code_i+1 for i in 0..n-1
         states_0 == states_n-1
 
@@ -43,7 +43,7 @@ class TransitionMap:
 
     def __init__(self, map=None, special=None):
         if not map:
-            map = [-maxint, {}, maxint]
+            map = [-sysmaxsize, {}, sysmaxsize]
         if not special:
             special = {}
 
@@ -51,11 +51,11 @@ class TransitionMap:
         self.special = special
         #self.check() ###
 
-    def add(self, event, new_state, TupleType=TupleType):
+    def add(self, event, new_state, tt=tuple):
         """
         Add transition to |new_state| on |event|.
         """
-        if type(event) == TupleType:
+        if type(event) == tt:
             code0, code1 = event
             i = self.split(code0)
             j = self.split(code1)
@@ -66,11 +66,11 @@ class TransitionMap:
         else:
             self.get_special(event)[new_state] = 1
 
-    def add_set(self, event, new_set, TupleType=TupleType):
+    def add_set(self, event, new_set, tt=tuple):
         """
         Add transitions to the states in |new_set| on |event|.
         """
-        if type(event) == TupleType:
+        if type(event) == tt:
             code0, code1 = event
             i = self.split(code0)
             j = self.split(code1)
@@ -115,7 +115,7 @@ class TransitionMap:
 
     # ------------------- Private methods --------------------
 
-    def split(self, code, len=len, maxint=maxint):
+    def split(self, code, len=len, maxsize=sysmaxsize):
         """
         Search the list for the position of the split point for |code|,
         inserting a new split point if necessary. Returns index |i| such
@@ -125,7 +125,7 @@ class TransitionMap:
         map = self.map
         hi = len(map) - 1
         # Special case: code == map[-1]
-        if code == maxint:
+        if code == sysmaxsize:
             return hi
 
         # General case
@@ -133,7 +133,7 @@ class TransitionMap:
         # loop invariant: map[lo] <= code < map[hi] and hi - lo >= 2
         while hi - lo >= 4:
             # Find midpoint truncated to even index
-            mid = ((lo + hi) / 2) & ~1
+            mid = int(((lo + hi) / 2)) & ~1
             if code < map[mid]:
                 hi = mid
             else:
@@ -168,9 +168,9 @@ class TransitionMap:
         i = 0
         while i < n:
             code = map[i]
-            if code == -maxint:
+            if code == -sysmaxsize:
                 code_str = "-inf"
-            elif code == maxint:
+            elif code == sysmaxsize:
                 code_str = "inf"
             else:
                 code_str = str(code)
@@ -187,7 +187,7 @@ class TransitionMap:
             special_strs[event] = state_set_str(set)
 
         return "[%s]+%s" % (
-            string.join(map_strs, ","),
+            ",".join(map_strs),
             special_strs)
 
     # --------------------- Debugging methods -----------------------
@@ -195,7 +195,7 @@ class TransitionMap:
     def check(self):
         """Check data structure integrity."""
         if not self.map[-3] < self.map[-1]:
-            print self
+            logging.debug(repr(self))
             assert 0
 
     def dump(self, file):
@@ -213,12 +213,12 @@ class TransitionMap:
 
     def dump_range(self, code0, code1, set, file):
         if set:
-            if code0 == -maxint:
-                if code1 == maxint:
+            if code0 == -sysmaxsize:
+                if code1 == sysmaxsize:
                     k = "any"
                 else:
                     k = "< %s" % self.dump_char(code1)
-            elif code1 == maxint:
+            elif code1 == sysmaxsize:
                 k = "> %s" % self.dump_char(code0 - 1)
             elif code0 == code1 - 1:
                 k = self.dump_char(code0)
@@ -254,4 +254,4 @@ def state_set_str(set):
     for state in state_list:
         str_list.append("S%d" % state.number)
 
-    return "[%s]" % string.join(str_list, ",")
+    return "[%s]" % ",".join(str_list)

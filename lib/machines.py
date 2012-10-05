@@ -6,12 +6,11 @@ Classes for building NFAs and DFAs
 
 import string
 import sys
-from sys import maxint
-from types import TupleType
+from sys import maxsize
 
-from plex.transitions import TransitionMap
+from plex3.transitions import TransitionMap
 
-LOWEST_PRIORITY = -sys.maxint
+LOWEST_PRIORITY = -sys.maxsize
 
 
 class Machine:
@@ -128,6 +127,10 @@ class Node:
         if action is not None:
             file.write("      %s [priority %d]\n" % (action, priority))
 
+    def __lt__(self, other):
+        #Needed for sorting in StateMap.make_key
+        return (self.number < other.number)
+
 
 class FastMachine:
     """
@@ -184,12 +187,12 @@ class FastMachine:
         self.initial_states[name] = state
 
     def add_transitions(self, state, event, new_state):
-        if type(event) == TupleType:
+        if type(event) == tuple:
             code0, code1 = event
-            if code0 == -maxint:
+            if code0 == -maxsize:
                 state['else'] = new_state
 
-            elif code1 <> maxint:
+            elif code1 != maxsize:
                 while code0 < code1:
                     state[chr(code0)] = new_state
                     code0 = code0 + 1
@@ -269,9 +272,10 @@ class FastMachine:
         return tuple(result)
 
     def ranges_to_string(self, range_list):
-        return string.join(map(self.range_to_string, range_list), ",")
+        return ','.join(map(self.range_to_string, range_list))
 
-    def range_to_string(self, (c1, c2)):
+    def range_to_string(self, cs):
+        c1, c2 = cs
         if c1 == c2:
             return repr(c1)
         else:
@@ -324,7 +328,7 @@ class FastMachine:
 ##     for name, index in self.initial_states.items():
 ##       f.write("        %s: State %d\n" % (
 ##         repr(name), id(self.states[index])))
-##     for i in xrange(1, len(self.states)):
+##     for i in range(1, len(self.states)):
 ##       table, action = self.states[i]
 ##       f.write("    State %d:" % i)
 ##       if action:

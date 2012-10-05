@@ -4,8 +4,8 @@ Python Lexical Analyser
 Traditional Regular Expression Syntax
 """
 
-from plex.regexps import *
-from plex.errors import PlexError
+from plex3.regexps import *
+from plex3.errors import PlexError
 
 
 class RegexpSyntaxError(PlexError):
@@ -44,7 +44,7 @@ class REParser:
                 self.next()
                 re_list.append(self.parse_seq())
 
-            re = apply(Alt, tuple(re_list))
+            re = Alt(*re_list)
 
         return re
 
@@ -54,7 +54,7 @@ class REParser:
         while not self.end and not self.c in "|)":
             re_list.append(self.parse_mod())
 
-        return apply(Seq, tuple(re_list))
+        return Seq(*re_list)
 
     def parse_mod(self):
         """Parse a primitive regexp followed by *, +, ? modifiers."""
@@ -106,17 +106,17 @@ class REParser:
             char_list.append(']')
             self.next()
 
-        while not self.end and self.c <> ']':
+        while not self.end and self.c != ']':
             c1 = self.get()
-            if self.c == '-' and self.lookahead(1) <> ']':
+            if self.c == '-' and self.lookahead(1) != ']':
                 self.next()
                 c2 = self.get()
-                for a in xrange(ord(c1), ord(c2) + 1):
+                for a in range(ord(c1), ord(c2) + 1):
                     char_list.append(chr(a))
             else:
                 char_list.append(c1)
 
-        chars = string.join(char_list, "")
+        chars = "".join(char_list)
         if invert:
             return AnyBut(chars)
         else:

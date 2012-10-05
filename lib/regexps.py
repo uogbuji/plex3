@@ -7,9 +7,9 @@ Regular Expressions
 import array
 import string
 import types
-from sys import maxint
+from sys import maxsize
 
-from plex import errors
+from plex3 import errors
 
 #
 #	 Constants
@@ -85,10 +85,10 @@ def CodeRanges(code_list):
     an RE which will match a character in any of the ranges.
     """
     re_list = []
-    for i in xrange(0, len(code_list), 2):
+    for i in range(0, len(code_list), 2):
         re_list.append(CodeRange(code_list[i], code_list[i + 1]))
 
-    return apply(Alt, tuple(re_list))
+    return Alt(*re_list)
 
 
 def CodeRange(code1, code2):
@@ -161,12 +161,12 @@ class RE:
             self.wrong_type(num, value, "Plex.RE instance")
 
     def check_string(self, num, value):
-        if type(value) <> type(''):
+        if type(value) != type(''):
             self.wrong_type(num, value, "string")
 
     def check_char(self, num, value):
         self.check_string(num, value)
-        if len(value) <> 1:
+        if len(value) != 1:
             raise errors.PlexValueError(
                 "Invalid value for argument %d of Plex.%s."
                 "Expected a string of length 1, got: %s" % (
@@ -202,7 +202,7 @@ class RE:
 
 ##	 def build_machine(self, m, initial_state, final_state, match_bol, nocase):
 ##		 c = self.char
-##		 if match_bol and c <> BOL:
+##		 if match_bol and c != BOL:
 ##			 s1 = self.build_opt(m, initial_state, BOL)
 ##		 else:
 ##			 s1 = initial_state
@@ -311,7 +311,7 @@ class Seq(RE):
 
     def __init__(self, *re_list):
         nullable = 1
-        for i in xrange(len(re_list)):
+        for i in range(len(re_list)):
             re = re_list[i]
             self.check_re(i, re)
             nullable = nullable and re.nullable
@@ -338,7 +338,7 @@ class Seq(RE):
         else:
             s1 = initial_state
             n = len(re_list)
-            for i in xrange(n):
+            for i in range(n):
                 if i < n - 1:
                     s2 = m.new_state()
                 else:
@@ -350,7 +350,7 @@ class Seq(RE):
                 match_bol = re.match_nl or (match_bol and re.nullable)
 
     def calc_str(self):
-        return "Seq(%s)" % string.join(map(str, self.re_list), ",")
+        return "Seq(%s)" % ",".join(map(str, self.re_list))
 
 
 class Alt(RE):
@@ -393,7 +393,7 @@ class Alt(RE):
                 re.build_machine(m, initial_state, final_state, 0, nocase)
 
     def calc_str(self):
-        return "Alt(%s)" % string.join(map(str, self.re_list), ",")
+        return "Alt(%s)" % ",".join(map(str, self.re_list))
 
 
 class Rep1(RE):
@@ -463,7 +463,7 @@ def Str1(s):
     """
     Str1(s) is an RE which matches the literal string |s|.
     """
-    result = apply(Seq, tuple(map(Char, s)))
+    result = Seq(*map(Char, s))
     result.str = "Str(%s)" % repr(s)
     return result
 
@@ -476,8 +476,8 @@ def Str(*strs):
     if len(strs) == 1:
         return Str1(strs[0])
     else:
-        result = apply(Alt, tuple(map(Str1, strs)))
-        result.str = "Str(%s)" % string.join(map(repr, strs), ",")
+        result = Alt(*map(Str1, strs))
+        result.str = "Str(%s)" % ",".join(map(repr, strs))
         return result
 
 
@@ -485,7 +485,7 @@ def Any(s):
     """
     Any(s) is an RE which matches any character in the string |s|.
     """
-    #result = apply(Alt, tuple(map(Char, s)))
+    #result = Alt(*map(Char, s))
     result = CodeRanges(chars_to_ranges(s))
     result.str = "Any(%s)" % repr(s)
     return result
@@ -497,8 +497,8 @@ def AnyBut(s):
     newline) which is not in the string |s|.
     """
     ranges = chars_to_ranges(s)
-    ranges.insert(0, -maxint)
-    ranges.append(maxint)
+    ranges.insert(0, -maxsize)
+    ranges.append(maxsize)
     result = CodeRanges(ranges)
     result.str = "AnyBut(%s)" % repr(s)
     return result
@@ -526,7 +526,7 @@ def Range(s1, s2=None):
         for i in range(0, len(s1), 2):
             ranges.append(CodeRange(ord(s1[i]), ord(s1[i+1]) + 1))
 
-        result = apply(Alt, tuple(ranges))
+        result = Alt(*ranges)
         result.str = "Range(%s)" % repr(s1)
 
     return result

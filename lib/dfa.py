@@ -4,9 +4,9 @@ Python Lexical Analyser
 Converting NFA to DFA
 """
 
-from plex import machines
-from plex.machines import LOWEST_PRIORITY
-from plex.transitions import TransitionMap
+from plex3 import machines
+from plex3.machines import LOWEST_PRIORITY
+from plex3.transitions import TransitionMap
 
 
 def nfa_to_dfa(old_machine, debug=None):
@@ -159,7 +159,8 @@ class StateMap:
         Convert a set of states into a uniquified
         sorted tuple suitable for use as a dictionary key.
         """
-        lst = state_set.keys()
+        #Warning: http://blog.labix.org/2008/06/27/watch-out-for-listdictkeys-in-python-3
+        lst = list(state_set.keys())
         lst.sort()
         return tuple(lst)
 

@@ -6,13 +6,11 @@
 #
 #=======================================================================
 
-import types
-
-from plex import actions
-from plex import dfa as DFA
-from plex import errors
-from plex import machines
-from plex import regexps
+from plex3 import actions
+from plex3 import dfa as DFA
+from plex3 import errors
+from plex3 import machines
+from plex3 import regexps
 
 # debug_flags for Lexicon constructor
 DUMP_NFA = 1
@@ -114,11 +112,11 @@ class Lexicon:
 
     def __init__(self, specifications, debug=None,
                  debug_flags=7, timings=None):
-        if type(specifications) <> types.ListType:
+        if type(specifications) != list:
             raise errors.InvalidScanner("Scanner definition is not a list")
 
         if timings:
-            from plex.timing import time
+            from plex3.timing import time
             total_time = 0.0
             time1 = time()
 
@@ -133,7 +131,7 @@ class Lexicon:
                         nfa, user_initial_state, token, token_number)
                     token_number = token_number + 1
 
-            elif type(spec) == types.TupleType:
+            elif type(spec) == tuple:
                 self.add_token_to_machine(
                     nfa, default_initial_state, spec, token_number)
                 token_number = token_number + 1
@@ -188,14 +186,14 @@ class Lexicon:
             re.build_machine(machine, initial_state, final_state,
                              match_bol=1, nocase=0)
             final_state.set_action(action, priority=-token_number)
-        except errors.PlexError, e:
+        except errors.PlexError as e:
             raise e.__class__("Token number %d: %s" % (token_number, e))
 
     def parse_token_definition(self, token_spec):
-        if type(token_spec) <> types.TupleType:
+        if type(token_spec) != tuple:
             raise errors.InvalidToken("Token definition is not a tuple")
 
-        if len(token_spec) <> 2:
+        if len(token_spec) != 2:
             raise errors.InvalidToken(
                 "Wrong number of items in token definition")
 

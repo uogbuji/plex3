@@ -4,10 +4,8 @@ Python Lexical Analyser
 Exception classes
 """
 
-import exceptions
 
-
-class PlexError(exceptions.Exception):
+class PlexError(Exception):
     message = ""
 
 

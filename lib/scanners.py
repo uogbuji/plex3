@@ -4,8 +4,10 @@ Python Lexical Analyser
 Scanning an input stream
 """
 
-from plex import errors
-from plex.regexps import BOL, EOL, EOF
+import logging
+
+from plex3 import errors
+from plex3.regexps import BOL, EOL, EOF
 
 
 class Scanner:
@@ -120,8 +122,7 @@ class Scanner:
         action = self.run_machine_inlined()
         if action:
             if self.trace:
-                print "Scanner: read: Performing", action, "%d:%d" % (
-                      self.start_pos, self.cur_pos)
+                logging.debug("Scanner: read: Performing {0} {1}:{2}".format(action, self.start_pos, self.cur_pos))
 
             base = self.buf_start_pos
             text = self.buffer[self.start_pos - base: self.cur_pos - base]
@@ -134,6 +135,7 @@ class Scanner:
                     return ('', None)
 
             import pdb
+            print(repr(self.cur_char))
             #pdb.set_trace()
             raise errors.UnrecognizedInput(self, self.state_name)
 
@@ -166,9 +168,9 @@ class Scanner:
         trace = self.trace
         while 1:
             if trace: #TRACE#
-                print "State %d, %d/%d:%s -->" % ( #TRACE#
+                logging.debug('State {0}, {1}/{2}:{3} -->'.format( #TRACE#
                     state['number'], input_state,
-                    cur_pos, repr(cur_char))  #TRACE#
+                    cur_pos, repr(cur_char))) #TRACE#
             # Begin inlined self.save_for_backup()
             #action = state.action #@slow
             action = state['action'] #@fast
@@ -186,7 +188,7 @@ class Scanner:
 
             if new_state:
                 if trace: #TRACE#
-                    print "State %d" % new_state['number']  #TRACE#
+                    logging.debug('State {0}'.format(new_state['number'])) #TRACE#
 
                 state = new_state
                 # Begin inlined: self.next_char()
@@ -237,7 +239,7 @@ class Scanner:
                 # End inlined self.next_char()
             else: # not new_state
                 if trace: #TRACE#
-                    print "blocked"  #TRACE#
+                    logging.debug('blocked') #TRACE#
                 # Begin inlined: action = self.back_up()
                 if backup_state:
                     (action, cur_pos, cur_line, cur_line_start,
@@ -255,7 +257,7 @@ class Scanner:
         self.next_pos = next_pos
         if trace: #TRACE#
             if action: #TRACE#
-                print "Doing", action #TRACE#
+                logging.debug('Doing {0}'.format(action)) #TRACE#
 
         return action
 
@@ -299,8 +301,8 @@ class Scanner:
     def next_char(self):
         input_state = self.input_state
         if self.trace:
-            print "Scanner: next:", " " * 20, "[%d] %d" % (
-                  input_state, self.cur_pos),
+            logging.debug('Scanner: next: {0} [{1}] {2}'.format(
+                " " * 20, input_state, self.cur_pos))
 
         if input_state == 1:
             self.cur_pos = self.next_pos
@@ -335,8 +337,8 @@ class Scanner:
             self.cur_char = ''
 
         if self.trace:
-            print "--> [%d] %d %s" % (input_state,
-                                      self.cur_pos, repr(self.cur_char))
+            logging.debug('--> [{0}] {1} {2}'.format(
+                input_state, self.cur_pos, repr(self.cur_char)))
 
 #	def read_char(self):
 #		"""
